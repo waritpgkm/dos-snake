@@ -15,6 +15,12 @@ snake_dy dw 0
 food_x dw 0
 food_y dw 0
 
+section .bss
+rows_offset resw 200
+
+section .text
+global start
+
 start:
     mov ah, 0x00
     mov al, 0x13
@@ -22,6 +28,8 @@ start:
 
     mov ax, VIDEO_MEM_SEG      ; video memory segment
     mov es, ax
+
+    call set_rows_offset
 
     call get_random_x
     call get_random_y
@@ -47,6 +55,20 @@ continue_loop:
     call wait_for_tick
 
     jmp main_loop
+
+set_rows_offset:
+    mov cx, 200
+    xor ax, ax
+    xor si, si
+.loop:
+    mov bx, si
+    shl bx, 1
+    mov [rows_offset + bx], ax
+    add ax, WIDTH
+    inc si
+    loop .loop
+
+    ret
 
 get_random_x:
     mov ah, 0
@@ -164,6 +186,8 @@ update_pos:
 .reset:
     mov word [snake_x], 150
     mov word [snake_y], 100
+    mov word [snake_dx], 0
+    mov word [snake_dy], 0
     ret
 
 draw_block:
@@ -180,10 +204,10 @@ draw_block:
     mov cx, 0
 
 .draw_col:
-    mov ax, [snake_y]
-    add ax, si
-    mov bx, WIDTH
-    mul bx
+    mov bx, [snake_y]
+    add bx, si
+    shl bx, 1
+    mov ax, [rows_offset+bx]
     mov bx, [snake_x]
     add ax, bx
     add ax, cx
@@ -221,10 +245,10 @@ clear_block:
     mov cx, 0
 
 .clear_col:
-    mov ax, [snake_y]
-    add ax, si
-    mov bx, WIDTH
-    mul bx
+    mov bx, [snake_y]
+    add bx, si
+    shl bx, 1
+    mov ax, [rows_offset+bx]
     mov bx, [snake_x]
     add ax, bx
     add ax, cx
@@ -262,10 +286,10 @@ food_block:
     mov cx, 0
 
 .food_col:
-    mov ax, [food_y]
-    add ax, si
-    mov bx, WIDTH
-    mul bx
+    mov bx, [food_y]
+    add bx, si
+    shl bx, 1
+    mov ax, [rows_offset + bx]
     mov bx, [food_x]
     add ax, bx
     add ax, cx
