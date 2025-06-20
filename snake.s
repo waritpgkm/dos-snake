@@ -19,6 +19,7 @@ snake_dy dw 0
 
 food_x dw 0
 food_y dw 0
+just_ate db 0
 
 SPACE equ 0
 UP equ 1
@@ -62,6 +63,7 @@ main_loop:
     call get_random_x
     call get_random_y
     call food_block
+    mov byte [just_ate], 1
 continue_loop:
     call check_input
     call set_minimap
@@ -235,6 +237,9 @@ check_input:
     ret
 
 set_minimap:
+    mov al, [just_ate]
+    cmp al, 1
+    je .skip_tail
     mov ax, [tail_y]
     mov bx, 32
     mul bx
@@ -245,7 +250,7 @@ set_minimap:
     mov [tail_d], al
     mov al, 0
     mov [minimap+si], al
-
+.skip_tail:
     mov ax, [head_y]
     mov bx, 32
     mul bx
@@ -276,6 +281,9 @@ update_pos:
     add ax, [snake_dy]
     mov [head_y], ax
 
+    mov al, [just_ate]
+    cmp al, 1
+    je .skip_tail
     mov al, [tail_d]
     cmp al, UP
     je .tail_up
@@ -285,7 +293,9 @@ update_pos:
     je .tail_left
     cmp al, RIGHT
     je .tail_right
-
+    ret
+.skip_tail:
+    mov byte [just_ate], 0
     ret
 
 .near_l_edge:
